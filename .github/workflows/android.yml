@@ -1,32 +1,37 @@
-name: Build CI
+name: Android CI
 
-on: [ push, pull_request ]
+on:
+
+  workflow_dispatch:
 
 jobs:
   build:
-    name: Build on ${{ matrix.os }}
-    runs-on: ${{ matrix.os }}
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [ ubuntu-latest, windows-latest, macOS-latest ]
+
+    runs-on: ubuntu-latest
 
     steps:
       - name: Check out
         uses: actions/checkout@v3
+        with:
+          submodules: "recursive"
+          fetch-depth: 0
+          ref: for-build
+          
       - name: Set up JDK 17
         uses: actions/setup-java@v3
         with:
           distribution: 'temurin'
           java-version: '17'
           cache: 'gradle'
+          
       - name: Build with Gradle
         run: |
           echo 'org.gradle.caching=true' >> gradle.properties
           ./gradlew assemble
           ./gradlew --stop
+          
       - name: Upload build artifact
         uses: actions/upload-artifact@v3
         with:
-          name: ${{ matrix.os }}-artifact
+          name: outputs-artifact
           path: app/build/outputs
